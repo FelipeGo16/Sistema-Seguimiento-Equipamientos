@@ -1,0 +1,214 @@
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+    <h5 class="mb-0 fw-bold">
+      <i class="bi bi-building me-2"></i>Módulo 1: Información de Equipamientos
+    </h5>
+    <span class="badge bg-warning text-dark" *ngIf="!authService.canManageEquipments()"
+      >Lectura Protegida</span
+    >
+  </div>
+  <div class="card-body">
+    <form [formGroup]="equipmentForm" (ngSubmit)="saveEquipment()">
+      <div class="row g-3">
+        <!-- (Selectores de Localidad, CDC, Tipo, Código, Entidad, Subdirección, Uso y Estado permanecen idénticos) -->
+        <div class="col-md-4">
+          <label class="form-label fw-bold small text-muted">Localidad</label>
+          <select class="form-select" formControlName="localidad" (change)="onLocalidadChange()">
+            <option value="">Seleccione una Localidad...</option>
+            <option *ngFor="let loc of getLocalidades()" [value]="loc">
+              {{ loc }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label fw-bold small text-muted">CDC</label>
+          <select class="form-select" formControlName="cdc" (change)="onCdcChange()">
+            <option value="">Seleccione un CDC...</option>
+            <option *ngFor="let cdc of getCDCs()" [value]="cdc">
+              {{ cdc }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label fw-bold small text-muted">Tipo de equipamiento</label>
+          <select class="form-select" formControlName="tipoEquipamiento" (change)="onTipoChange()">
+            <option value="">Seleccione tipo...</option>
+            <option *ngFor="let tipo of getTipos()" [value]="tipo">
+              {{ tipo }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label fw-bold small text-muted">Equipamiento enumerado</label>
+          <select class="form-select" formControlName="equipamientoEnumerado">
+            <option value="">Seleccione código...</option>
+            <option *ngFor="let cod of getCodigos()" [value]="cod">
+              {{ cod }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label fw-bold small text-muted">Ocupación servicio/entidad</label>
+          <select class="form-select" formControlName="ocupacionServicio">
+            <option value="">Seleccione servicio/entidad...</option>
+            <option value="SERVICIO CENTROS DE DESARROLLO COMUNITARIO">
+              SERVICIO CENTROS DE DESARROLLO COMUNITARIO
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label fw-bold small text-muted">Ocupación subdirección técnica</label>
+          <select class="form-select" formControlName="ocupacionSubdireccion">
+            <option value="">Seleccione subdirección...</option>
+            <option value="SERVICIO CENTROS DE DESARROLLO COMUNITARIO">
+              SERVICIO CENTROS DE DESARROLLO COMUNITARIO
+            </option>
+            <option value="SUBDIRECIÓN LOCAL PARA LA INTEGRACIÓN SOCIAL - SLIS">
+              SUBDIRECIÓN LOCAL PARA LA INTEGRACIÓN SOCIAL - SLIS
+            </option>
+            <option value="SUBDIRECIÓN PARA LA GESTIÓN INTEGRAL LOCAL">
+              SUBDIRECIÓN PARA LA GESTIÓN INTEGRAL LOCAL
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label fw-bold small text-muted">Uso equipamiento</label>
+          <select class="form-select" formControlName="usoEquipamiento">
+            <option value="">Seleccione uso...</option>
+            <option value="ESPECIALIZADO">ESPECIALIZADO</option>
+            <option value="NO APLICA">NO APLICA</option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label fw-bold small text-muted">Estado</label>
+          <select class="form-select" formControlName="estado">
+            <option value="ABIERTO">ABIERTO</option>
+            <option value="CERRADO">CERRADO</option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label fw-bold small text-muted">Capacidad (Aforo)</label>
+          <input type="number" class="form-control" formControlName="capacidad" />
+          <div
+            *ngIf="
+              equipmentForm.get('capacidad')?.touched &&
+              equipmentForm.get('capacidad')?.hasError('min')
+            "
+            class="text-danger small mt-1"
+          >
+            ⚠️ La capacidad debe ser estrictamente mayor a 0.
+          </div>
+        </div>
+
+        <div class="col-md-12" *ngIf="equipmentForm.get('estado')?.value === 'CERRADO'">
+          <label class="form-label text-danger fw-bold small"
+            >Motivo cierre * (Anexo Obligatorio)</label
+          >
+          <input type="text" class="form-control border-danger" formControlName="motivoCierre" />
+        </div>
+
+        <!-- 11. Checklist de Días Disponibles -->
+        <div class="col-md-12 my-2">
+          <label class="form-label fw-bold small text-muted d-block">Días disponibles</label>
+          <div formArrayName="diasDisponibles" class="p-2 border rounded bg-white">
+            <div
+              *ngFor="let dia of diasSemanaList; let i = index"
+              class="form-check form-check-inline mx-2 my-1"
+            >
+              <input
+                class="form-check-input"
+                type="checkbox"
+                [formControlName]="i"
+                [id]="'dayCheckM1_' + i"
+              />
+              <label class="form-check-label small fw-semibold" [for]="'dayCheckM1_' + i">{{
+                dia
+              }}</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 12. Hora apertura con Validación Requerida Condicional -->
+        <div class="col-md-4">
+          <label class="form-label fw-bold small text-muted">Hora apertura</label>
+          <input
+            type="time"
+            class="form-control"
+            formControlName="horaApertura"
+            [class.is-invalid]="
+              equipmentForm.touched && equipmentForm.hasError('aperturaRequerida')
+            "
+          />
+          <div
+            *ngIf="equipmentForm.touched && equipmentForm.hasError('aperturaRequerida')"
+            class="text-danger small mt-1"
+          >
+            ⚠️ Apertura obligatoria para los días habilitados.
+          </div>
+        </div>
+
+        <!-- 13. Hora cierre con Validación Posterior a Apertura -->
+        <div class="col-md-4">
+          <label class="form-label fw-bold small text-muted">Hora cierre</label>
+          <input
+            type="time"
+            class="form-control"
+            formControlName="horaCierre"
+            [class.is-invalid]="
+              equipmentForm.touched &&
+              (equipmentForm.hasError('cierreRequerido') ||
+                equipmentForm.hasError('cierreInvalido'))
+            "
+          />
+          <div
+            *ngIf="equipmentForm.touched && equipmentForm.hasError('cierreRequerido')"
+            class="text-danger small mt-1"
+          >
+            ⚠️ Cierre obligatorio para los días habilitados.
+          </div>
+          <div
+            *ngIf="equipmentForm.touched && equipmentForm.hasError('cierreInvalido')"
+            class="text-danger small mt-1"
+          >
+            ⚠️ La hora de cierre debe ser posterior a la de apertura.
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label fw-bold small text-muted">Fecha de vigencia</label>
+          <input type="date" class="form-control" formControlName="fechaVigencia" />
+        </div>
+
+        <!-- 14. Observaciones con Placeholder Requerido -->
+        <div class="col-md-12">
+          <label class="form-label fw-bold small text-muted">Observaciones</label>
+          <input
+            type="text"
+            class="form-control"
+            formControlName="observaciones"
+            placeholder="Novedades o precisiones operativas"
+          />
+          <!-- 👈 Placeholder Actualizado -->
+        </div>
+      </div>
+
+      <div class="mt-4 text-end" *ngIf="authService.canManageEquipments()">
+        <button
+          type="submit"
+          class="btn btn-primary px-4 fw-bold"
+          [disabled]="!equipmentForm.valid"
+        >
+          Guardar Equipamiento
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

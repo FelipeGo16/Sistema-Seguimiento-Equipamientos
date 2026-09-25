@@ -1,0 +1,295 @@
+<div class="row">
+  <!-- NIVEL 1: CURSO (INFORMACIÓN GENERAL ACTUALIZADA) -->
+  <div class="col-lg-5 mb-4">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-success text-white py-3">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-journal-bookmark me-2"></i>Nivel: Curso</h5>
+      </div>
+      <div class="card-body">
+        <form [formGroup]="cursoForm" (ngSubmit)="saveCurso()">
+          <!-- ID Único Bloqueado Automático -->
+          <div class="mb-3">
+            <label class="form-label fw-bold small text-muted">ID del curso</label>
+            <input
+              type="text"
+              class="form-control bg-light fw-bold text-primary"
+              formControlName="idCurso"
+              readonly
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold small text-muted">Nombre del curso</label>
+            <input
+              type="text"
+              class="form-control"
+              formControlName="nombreCurso"
+              placeholder="Ej: Curso de Confección Básica"
+            />
+          </div>
+
+          <!-- Componente de servicio en Lista Desplegable Requerida -->
+          <div class="mb-3">
+            <label class="form-label fw-bold small text-muted">Componente de servicio</label>
+            <select class="form-select" formControlName="componenteServicio">
+              <option value="">Seleccione un componente...</option>
+              <option *ngFor="let comp of componentesServicioList" [value]="comp">
+                {{ comp }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Rango de Fechas con Alerta de Validación Cruzada -->
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="form-label fw-bold small text-muted">Fecha inicio</label>
+              <input
+                type="date"
+                class="form-control"
+                formControlName="fechaInicio"
+                [class.is-invalid]="cursoForm.touched && cursoForm.hasError('fechasInconsistentes')"
+              />
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-bold small text-muted">Fecha fin</label>
+              <input
+                type="date"
+                class="form-control"
+                formControlName="fechaFin"
+                [class.is-invalid]="cursoForm.touched && cursoForm.hasError('fechasInconsistentes')"
+              />
+            </div>
+          </div>
+          <div
+            *ngIf="cursoForm.touched && cursoForm.hasError('fechasInconsistentes')"
+            class="text-danger small mb-3"
+          >
+            ⚠️ La fecha de inicio debe ser menor o igual a la fecha fin.
+          </div>
+
+          <!-- Asistentes obligatorios mayores a 0 -->
+          <div class="mb-4">
+            <label class="form-label fw-bold small text-muted">Asistentes</label>
+            <input
+              type="number"
+              class="form-control"
+              formControlName="asistentes"
+              placeholder="Mínimo 1"
+            />
+            <div
+              *ngIf="
+                cursoForm.get('asistentes')?.touched && cursoForm.get('asistentes')?.hasError('min')
+              "
+              class="text-danger small mt-1"
+            >
+              ⚠️ La cantidad de asistentes debe ser mayor a 0.
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            class="btn btn-success w-100 py-2 fw-bold"
+            *ngIf="authService.canManageOcupacion()"
+            [disabled]="!cursoForm.valid"
+          >
+            Guardar Curso
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- NIVEL 2: SESIÓN (REESTRUCTURACIÓN COMPLETA CON SELECTORES ASOCIADOS A EQUIPAMIENTOS) -->
+  <div class="col-lg-7 mb-4">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-info text-dark py-3">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2"></i>Nivel: Sesión</h5>
+      </div>
+      <div class="card-body">
+        <form [formGroup]="sesionForm" (ngSubmit)="saveSesion()">
+          <div class="row g-3">
+            <!-- Selector 1: Curso (Identificador Único Automático) -->
+            <!-- Selector de Curso (Corregido con las propiedades de la DB) -->
+            <div class="col-md-12">
+              <label class="form-label fw-bold small text-muted">Curso</label>
+              <select class="form-select text-uppercase" formControlName="curso">
+                <option value="">Seleccione el curso...</option>
+                <!-- CORRECCIÓN: Se mapea con c.id y c.nombre exactamente como vienen de SQLite -->
+                <option *ngFor="let c of cursosDisponibles" [value]="c.id">
+                  ID: CRS-{{ c.id }} — {{ c.nombre }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Selector 2: Localidad Guardada en Equipamientos -->
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-muted">Localidad</label>
+              <select class="form-select" formControlName="localidad">
+                <option value="">Seleccione Localidad...</option>
+                <option *ngFor="let loc of localidadesSesion" [value]="loc">{{ loc }}</option>
+              </select>
+            </div>
+
+            <!-- Selector 3: CDC Guardado en Equipamientos -->
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-muted">CDC</label>
+              <select class="form-select" formControlName="cdc">
+                <option value="">Seleccione CDC...</option>
+                <option *ngFor="let cdc of cdcsSesion" [value]="cdc">{{ cdc }}</option>
+              </select>
+            </div>
+
+            <!-- Selector 4: Tipo de Equipamiento Guardado en Equipamientos -->
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-muted">Tipo de equipamiento</label>
+              <select class="form-select" formControlName="tipoEquipamiento">
+                <option value="">Seleccione tipo...</option>
+                <option *ngFor="let t of tiposSesion" [value]="t">{{ t }}</option>
+              </select>
+            </div>
+
+            <!-- Selector 5: Equipamiento Enumerado Guardado en Equipamientos -->
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-muted">Equipamiento enumerado</label>
+              <select class="form-select" formControlName="equipamientoEnumerado">
+                <option value="">Seleccione código...</option>
+                <option *ngFor="let cod of codigosSesion" [value]="cod">{{ cod }}</option>
+              </select>
+            </div>
+
+            <!-- Fecha e Indicador de Día de Semana Autocalculado -->
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-muted">Fecha de sesión</label>
+              <input
+                type="date"
+                class="form-control"
+                formControlName="fechaSesion"
+                [class.is-invalid]="
+                  sesionForm.touched && sesionForm.hasError('fechaFueraDeRangoCurso')
+                "
+              />
+              <div
+                *ngIf="sesionForm.touched && sesionForm.hasError('fechaFueraDeRangoCurso')"
+                class="text-danger small mt-1"
+              >
+                ⚠️ La fecha debe estar dentro del periodo del curso seleccionado.
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-muted"
+                >Día de semana (Autocalculado)</label
+              >
+              <input
+                type="text"
+                class="form-control bg-light fw-bold text-success"
+                formControlName="diaSemana"
+                readonly
+              />
+            </div>
+
+            <!-- Horas de Uso Controladas Cruzadas contra M1 -->
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-muted">Hora inicio de uso</label>
+              <input
+                type="time"
+                class="form-control"
+                formControlName="horaInicioUso"
+                [class.is-invalid]="
+                  sesionForm.touched && sesionForm.hasError('inicioFueraDeApertura')
+                "
+              />
+              <div
+                *ngIf="sesionForm.touched && sesionForm.hasError('inicioFueraDeApertura')"
+                class="text-danger small mt-1"
+              >
+                ⚠️ Fuera del horario de apertura del equipamiento.
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-muted">Hora fin de uso</label>
+              <input
+                type="time"
+                class="form-control"
+                formControlName="horaFinUso"
+                [class.is-invalid]="
+                  sesionForm.touched &&
+                  (sesionForm.hasError('finMenorAlInicio') ||
+                    sesionForm.hasError('finSobrepasaCierre'))
+                "
+              />
+              <div
+                *ngIf="sesionForm.touched && sesionForm.hasError('finMenorAlInicio')"
+                class="text-danger small mt-1"
+              >
+                ⚠️ Debe ser posterior a la hora de inicio de uso.
+              </div>
+              <div
+                *ngIf="sesionForm.touched && sesionForm.hasError('finSobrepasaCierre')"
+                class="text-danger small mt-1"
+              >
+                ⚠️ Sobrepasa la hora de cierre operativa del equipamiento.
+              </div>
+            </div>
+
+            <!-- Lista Desplegable Ampliada para Estado -->
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-muted">Estado de sesión</label>
+              <select class="form-select" formControlName="estadoSesion">
+                <option value="Programada">Programado</option>
+                <option value="Realizada">Realizado</option>
+                <option value="Cancelado">Cancelado</option>
+                <option value="No realizado">No realizado</option>
+                <option value="Fuera de servicio">Fuera de servicio</option>
+              </select>
+            </div>
+
+                        <!-- Campo de activación reactiva condicional para el Motivo (Lista Desplegable) -->
+            <div class="col-md-6">
+              <label class="form-label fw-bold small" [class.text-danger]="sesionForm.get('motivo')?.enabled" [class.text-muted]="sesionForm.get('motivo')?.disabled">
+                Motivo <span *ngIf="sesionForm.get('motivo')?.enabled">* (Obligatorio)</span>
+              </label>
+              <select class="form-select" formControlName="motivo"
+                      [class.is-invalid]="sesionForm.get('motivo')?.touched && sesionForm.get('motivo')?.hasError('required')">
+                <option value="">Seleccione el motivo de la novedad...</option>
+                <option value="ADECUACION">ADECUACION</option>
+                <option value="MANTENIMIENTO">MANTENIMIENTO</option>
+                <option value="DOTACION">DOTACION</option>
+                <option value="ARCHIVO">ARCHIVO</option>
+                <option value="TALENTO HUMANO">TALENTO HUMANO</option>
+                <option value="USO BODEGA">USO BODEGA</option>
+              </select>
+              <div *ngIf="sesionForm.get('motivo')?.touched && sesionForm.get('motivo')?.hasError('required')" class="text-danger small mt-1">
+                ⚠️ El motivo es requerido para el estado de sesión seleccionado.
+              </div>
+            </div>
+
+
+            <!-- Observaciones con Placeholder Requerido -->
+            <div class="col-md-12">
+              <label class="form-label fw-bold small text-muted">Observaciones</label>
+              <textarea
+                class="form-control"
+                formControlName="observaciones"
+                rows="2"
+                placeholder="Novedades"
+              ></textarea>
+              <!-- 👈 Placeholder Actualizado -->
+            </div>
+          </div>
+
+          <div class="mt-4 text-end" *ngIf="authService.canManageOcupacion()">
+            <button
+              type="submit"
+              class="btn btn-info px-4 fw-bold text-dark"
+              [disabled]="!sesionForm.valid"
+            >
+              Guardar Sesión
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

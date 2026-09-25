@@ -1,0 +1,15 @@
+# Dependencias de Node y Angular
+node_modules/
+.angular/
+dist/
+
+# Archivos temporales de entorno y del sistema
+.env
+.DS_Store
+Thumbs.db
+
+# Logs de errores
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+

@@ -1,0 +1,292 @@
+<div class="card shadow-sm border-0 mb-4 bg-white">
+  <!-- Barra Superior de Control Estilo Imagen Adjunta -->
+  <div
+    class="card-header bg-white border-bottom py-2 d-flex flex-wrap justify-content-between align-items-center gap-2"
+  >
+    <div class="d-flex align-items-center gap-1">
+      <button class="btn btn-light btn-sm border text-muted px-2">
+        <i class="bi bi-grid-3x2-gap me-1"></i>Semana laboral
+      </button>
+      <button class="btn btn-light btn-sm border text-muted px-2">
+        <i class="bi bi-calendar-week me-1"></i>Semana
+      </button>
+      <button class="btn btn-primary btn-sm px-3 fw-bold">
+        <i class="bi bi-calendar3 me-1"></i>Mes
+      </button>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-light btn-sm border text-muted">
+        <i class="bi bi-share me-1"></i>Compartir
+      </button>
+      <button class="btn btn-light btn-sm border text-muted">
+        <i class="bi bi-printer me-1"></i>Imprimir
+      </button>
+    </div>
+  </div>
+
+  <div class="p-3 bg-light border-bottom d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-white btn-sm border fw-bold px-3 shadow-sm bg-white">Hoy</button>
+      <h4 class="mb-0 fw-bold text-dark ms-3">{{ nombreMesAnio }}</h4>
+    </div>
+  </div>
+
+  <div class="card-body p-3">
+    <!-- BARRA DE FILTROS REQUERIDOS -->
+    <div class="row g-2 mb-3 p-2 bg-light rounded border small">
+      <div class="col-md-2">
+        <select
+          class="form-select form-select-sm"
+          [(ngModel)]="filters.localidad"
+          (change)="onFiltroChange(1)"
+        >
+          <option value="">Localidad (Todas)...</option>
+          <option *ngFor="let loc of localidadesFiltro" [value]="loc">{{ loc }}</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select
+          class="form-select form-select-sm"
+          [(ngModel)]="filters.cdc"
+          (change)="onFiltroChange(2)"
+          [disabled]="!filters.localidad"
+        >
+          <option value="">CDC (Todos)...</option>
+          <option *ngFor="let cdc of cdcsFiltro" [value]="cdc">{{ cdc }}</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select
+          class="form-select form-select-sm"
+          [(ngModel)]="filters.tipo"
+          (change)="onFiltroChange(3)"
+          [disabled]="!filters.cdc"
+        >
+          <option value="">Tipo equipamiento...</option>
+          <option *ngFor="let t of tiposFiltro" [value]="t">{{ t }}</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select
+          class="form-select form-select-sm"
+          [(ngModel)]="filters.codigo"
+          (change)="consultarProgramacionBD()"
+          [disabled]="!filters.tipo"
+        >
+          <option value="">Código único...</option>
+          <option *ngFor="let cod of codigosFiltro" [value]="cod">{{ cod }}</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <input
+          type="text"
+          class="form-control form-control-sm"
+          [(ngModel)]="filters.nombreCurso"
+          placeholder="Buscar por nombre de curso..."
+          (input)="consultarProgramacionBD()"
+        />
+      </div>
+    </div>
+
+    <!-- CUADRÍCULA DE MATRÍCULA MENSUAL -->
+    <div class="calendar-container border rounded style-grid-view">
+      <div class="calendar-weekdays bg-light text-center fw-semibold border-bottom py-2">
+        <div>Lunes</div>
+        <div>Martes</div>
+        <div>Miércoles</div>
+        <div>Jueves</div>
+        <div>Viernes</div>
+        <div>Sábado</div>
+        <div>Domingo</div>
+      </div>
+
+      <div class="calendar-grid">
+        <div
+          *ngFor="let dia of diasDelMes"
+          class="calendar-cell"
+          [class.mes-pagado]="!dia.esMesActual"
+          [class.celda-hoy]="esHoy(dia.fechaString)"
+        >
+          <div class="cell-header p-1 d-flex justify-content-between">
+            <span class="day-number fw-bold" [class.text-muted]="!dia.esMesActual">{{
+              dia.numeroDia
+            }}</span>
+          </div>
+
+          <!-- Listado de Píldoras de Sesiones dentro del Día -->
+          <div class="cell-body p-1 d-flex flex-column gap-1 overflow-hidden">
+            <div
+              *ngFor="let ev of dia.eventos"
+              (click)="abrirVentanaEmergente(ev)"
+              class="event-pill px-2 py-1 rounded text-truncate fw-semibold text-white cursor-pointer shadow-sm border-start border-3"
+              [ngClass]="{
+                'bg-dark border-secondary': ev.estado === 'Realizada',
+                'bg-secondary bg-opacity-75 text-dark border-primary': ev.estado === 'Programada',
+                'bg-danger text-white border-dark': ev.estado === 'Cancelada',
+              }"
+            >
+              <span class="small font-weight-bold">{{ ev.hora_inicio }}</span> {{ ev.curso }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================= -->
+<!-- VENTANA EMERGENTE MODAL RESPONSIVA (CARACTERÍSTICAS DE LA SESIÓN) -->
+<!-- ================================================================= -->
+<div
+  class="modal fade show d-block"
+  tabindex="-1"
+  *ngIf="sesionSeleccionada"
+  style="background: rgba(0, 0, 0, 0.55); z-index: 1055"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <!-- Cabecera del Modal -->
+      <div class="modal-header bg-dark text-white py-3">
+        <h5 class="modal-title fw-bold">
+          <i class="bi bi-info-circle-fill me-2 text-info"></i>Detalles de la Programación
+        </h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          (click)="cerrarVentanaEmergente()"
+        ></button>
+      </div>
+
+      <!-- Cuerpo del Modal con Doble Verificación de Variables Relacionales de SQLite -->
+      <div class="modal-body p-4 bg-light">
+        <!-- 1. Nombre del curso -->
+        <div class="mb-3">
+          <label
+            class="text-uppercase text-muted fw-bold d-block mb-1"
+            style="font-size: 0.7rem; letter-spacing: 0.5px"
+            >Nombre del curso</label
+          >
+          <div
+            class="p-2 bg-white rounded border border-secondary border-opacity-25 fw-bold text-primary"
+          >
+            <!-- CORRECCIÓN: Evalúa tanto la propiedad mapeada como la nativa de la DB -->
+            {{ sesionSeleccionada.curso || sesionSeleccionada.nombre_curso || 'Sin especificar' }}
+          </div>
+        </div>
+
+        <!-- 2. Equipamiento enumerado -->
+        <div class="mb-3">
+          <label
+            class="text-uppercase text-muted fw-bold d-block mb-1"
+            style="font-size: 0.7rem; letter-spacing: 0.5px"
+            >Equipamiento enumerado</label
+          >
+          <div class="p-2 bg-white rounded border text-secondary fw-semibold small">
+            <i class="bi bi-geo-alt-fill text-danger me-1"></i>
+            <!-- CORRECCIÓN: Evalúa el espacio consolidado o las columnas sueltas de la DB -->
+            {{
+              sesionSeleccionada.espacio ||
+                sesionSeleccionada.tipo + ' — ' + sesionSeleccionada.codigo_enumerado
+            }}
+          </div>
+        </div>
+
+        <!-- 3. Fecha y hora de inicio/fin -->
+        <div class="mb-3">
+          <label
+            class="text-uppercase text-muted fw-bold d-block mb-1"
+            style="font-size: 0.7rem; letter-spacing: 0.5px"
+            >Vigencia, Fecha y Horarios</label
+          >
+          <div class="p-2 bg-white rounded border text-dark">
+            <div class="row text-center g-2">
+              <div class="col-4 border-end">
+                <small class="text-muted d-block" style="font-size: 0.65rem">FECHA SESIÓN</small>
+                <span class="fw-bold small">{{
+                  sesionSeleccionada.fecha_sesion || sesionSeleccionada.fecha || 'N/A'
+                }}</span>
+              </div>
+              <div class="col-4 border-end">
+                <small class="text-muted d-block" style="font-size: 0.65rem">HORA INICIO</small>
+                <span class="text-success fw-bold"
+                  ><i class="bi bi-clock me-1"></i>{{ sesionSeleccionada.hora_inicio }}</span
+                >
+              </div>
+              <div class="col-4">
+                <small class="text-muted d-block" style="font-size: 0.65rem">HORA FIN</small>
+                <span class="text-danger fw-bold"
+                  ><i class="bi bi-clock-history me-1"></i>{{ sesionSeleccionada.hora_fin }}</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Estado de la sesión -->
+        <div class="mb-3">
+          <label
+            class="text-uppercase text-muted fw-bold d-block mb-1"
+            style="font-size: 0.7rem; letter-spacing: 0.5px"
+            >Estado de la sesión</label
+          >
+          <!-- CORRECCIÓN: Captura 'estado' o 'estado_sesion' para aplicar las directivas de color de Bootstrap -->
+          <span
+            class="badge p-2.5 w-100 text-center fw-bold text-uppercase d-block"
+            [ngClass]="{
+              'bg-success text-white':
+                sesionSeleccionada.estado === 'Realizada' ||
+                sesionSeleccionada.estado_sesion === 'Realizada',
+              'bg-primary text-white':
+                sesionSeleccionada.estado === 'Programada' ||
+                sesionSeleccionada.estado_sesion === 'Programada',
+              'bg-danger text-white':
+                sesionSeleccionada.estado === 'Cancelada' ||
+                sesionSeleccionada.estado_sesion === 'Cancelada',
+            }"
+          >
+            {{ sesionSeleccionada.estado || sesionSeleccionada.estado_sesion || 'Programada' }}
+          </span>
+        </div>
+
+        <!-- 5. Número de asistentes cuando exista -->
+        <div
+          class="mb-3"
+          *ngIf="sesionSeleccionada.asistentes_reales && sesionSeleccionada.asistentes_reales > 0"
+        >
+          <label
+            class="text-uppercase text-muted fw-bold d-block mb-1"
+            style="font-size: 0.7rem; letter-spacing: 0.5px"
+            >Número de asistentes</label
+          >
+          <div
+            class="p-2 bg-warning bg-opacity-10 border border-warning text-warning text-center rounded fw-bold small"
+          >
+            <i class="bi bi-people-fill me-1"></i
+            >{{ sesionSeleccionada.asistentes_reales }} Participantes Reales
+          </div>
+        </div>
+
+        <!-- Sección de justificación por cancelación -->
+        <div class="mt-3 border-top pt-3" *ngIf="sesionSeleccionada.motivo">
+          <label class="text-uppercase text-danger fw-bold d-block mb-1" style="font-size: 0.65rem"
+            >Justificación de la Novedad</label
+          >
+          <div class="alert alert-danger mb-0 py-2 small fw-semibold">
+            Motivo: {{ sesionSeleccionada.motivo }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Pie del Modal -->
+      <div class="modal-footer bg-white border-top py-2">
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm px-4 fw-bold"
+          (click)="cerrarVentanaEmergente()"
+        >
+          Cerrar Ventana
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

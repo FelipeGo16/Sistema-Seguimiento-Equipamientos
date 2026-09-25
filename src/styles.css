@@ -1,0 +1,81 @@
+/* Estilos Globales para el Módulo 3: Calendario Mensual */
+.calendar-container {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  overflow-x: auto;
+}
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(130px, 1fr));
+  color: #5f6368;
+  font-size: 0.85rem;
+  padding: 10px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(130px, 1fr));
+  grid-template-rows: repeat(6, 120px);
+}
+.calendar-cell {
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+}
+.mes-apagado {
+  background-color: #fafafa;
+  color: #c0c0c0;
+}
+.celda-hoy {
+  border: 2px solid #000000 !important;
+}
+.event-pill {
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+/* Ajustes para celdas adaptativas del Módulo de Seguimiento */
+.table-responsive table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.table table-bordered td {
+  padding: 10px !important;
+  vertical-align: top;
+  background-color: #ffffff;
+}
+.table td div {
+  min-height: 52px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Estilos Específicos para Vista de Cuadrícula Mensual */
+.style-grid-view .calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(5, 110px);
+}
+.style-grid-view .calendar-cell {
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+}
+.style-grid-view .event-pill {
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: transform 0.1s ease-in-out;
+}
+.style-grid-view .event-pill:hover {
+  transform: scale(1.02);
+}
