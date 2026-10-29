@@ -1,24 +1,24 @@
-import { Component, OnInit } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import {
-  FormBuilder,
-  FormGroup,
-  Validators,
-  ReactiveFormsModule,
-} from "@angular/forms";
-import { AuthService } from "../../services/auth.service";
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
-  selector: "app-login",
+  selector: 'app-login',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: "./login.component.html",
+  templateUrl: './login.component.html',
 })
 export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
-  errorMsg: string = "";
+  errorMsg: string = '';
 
-  rolesDisponibles = ["Administrador", "Nivel Central", "Equipo Local"];
+  // Lista de perfiles estructurada bajo el nuevo requerimiento técnico
+  rolesDisponibles: ('Nivel Central' | 'Equipo Local' | 'Administrador')[] = [
+    'Administrador',
+    'Nivel Central',
+    'Equipo Local',
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -27,8 +27,8 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {
     this.loginForm = this.fb.group({
-      usuario: ["", Validators.required],
-      rol: ["Equipo Local", Validators.required],
+      usuario: ['', Validators.required],
+      rol: ['Equipo Local', Validators.required], // Rol por defecto
     });
   }
 

@@ -51,38 +51,40 @@
           </select>
         </div>
 
-        <div class="col-md-4">
-          <label class="form-label fw-bold small text-muted">Ocupación servicio/entidad</label>
-          <select class="form-select" formControlName="ocupacionServicio">
-            <option value="">Seleccione servicio/entidad...</option>
-            <option value="SERVICIO CENTROS DE DESARROLLO COMUNITARIO">
-              SERVICIO CENTROS DE DESARROLLO COMUNITARIO
-            </option>
-          </select>
-        </div>
+        <!-- Selector de Ocupación Subdirección Técnica -->
+<div class="form-group">
+  <label for="ocupacionSubdireccion">Ocupación Subdirección Técnica</label>
+  <select 
+    id="ocupacionSubdireccion" 
+    formControlName="ocupacionSubdireccion" 
+    class="form-control" 
+    (change)="onSubdireccionChange()">
+    <option value="">Seleccione una opción...</option>
+    <!-- CAMBIO AQUÍ: de "let sub de" a "let sub of" -->
+    <option *ngFor="let sub of getSubdirecciones()" [value]="sub">{{ sub }}</option>
+  </select>
+</div>
 
-        <div class="col-md-4">
-          <label class="form-label fw-bold small text-muted">Ocupación subdirección técnica</label>
-          <select class="form-select" formControlName="ocupacionSubdireccion">
-            <option value="">Seleccione subdirección...</option>
-            <option value="SERVICIO CENTROS DE DESARROLLO COMUNITARIO">
-              SERVICIO CENTROS DE DESARROLLO COMUNITARIO
-            </option>
-            <option value="SUBDIRECIÓN LOCAL PARA LA INTEGRACIÓN SOCIAL - SLIS">
-              SUBDIRECIÓN LOCAL PARA LA INTEGRACIÓN SOCIAL - SLIS
-            </option>
-            <option value="SUBDIRECIÓN PARA LA GESTIÓN INTEGRAL LOCAL">
-              SUBDIRECIÓN PARA LA GESTIÓN INTEGRAL LOCAL
-            </option>
-          </select>
-        </div>
+<!-- Selector de Ocupación Servicio/Entidad -->
+<div class="form-group">
+  <label for="ocupacionServicio">Ocupación Servicio / Entidad</label>
+  <select 
+    id="ocupacionServicio" 
+    formControlName="ocupacionServicio" 
+    class="form-control">
+    <option value="">Seleccione una opción...</option>
+    <!-- CAMBIO AQUÍ: de "let serv de" a "let serv of" -->
+    <option *ngFor="let serv of getServicios()" [value]="serv">{{ serv }}</option>
+  </select>
+</div>
+
 
         <div class="col-md-4">
           <label class="form-label fw-bold small text-muted">Uso equipamiento</label>
           <select class="form-select" formControlName="usoEquipamiento">
             <option value="">Seleccione uso...</option>
             <option value="ESPECIALIZADO">ESPECIALIZADO</option>
-            <option value="NO APLICA">NO APLICA</option>
+            <option value="NO ESPECIALIZADO">NO ESPECIALIZADO</option>
           </select>
         </div>
 
@@ -108,12 +110,16 @@
           </div>
         </div>
 
-        <div class="col-md-12" *ngIf="equipmentForm.get('estado')?.value === 'CERRADO'">
-          <label class="form-label text-danger fw-bold small"
-            >Motivo cierre * (Anexo Obligatorio)</label
-          >
-          <input type="text" class="form-control border-danger" formControlName="motivoCierre" />
-        </div>
+        <div class="col-md-4">
+  <label class="form-label fw-bold small text-muted">Motivo de cierre</label>
+  <select class="form-select" formControlName="motivoCierre">
+    <option value="">Seleccione motivo...</option>
+    <option *ngFor="let motivo of motivoCierreList" [value]="motivo">
+      {{ motivo }}
+    </option>
+  </select>
+</div>
+
 
         <!-- 11. Checklist de Días Disponibles -->
         <div class="col-md-12 my-2">
