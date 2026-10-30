@@ -398,30 +398,78 @@ export class OcupacionComponent implements OnInit {
   ngOnInit(): void {
     const idAutomatico = this.generarIdCursoUnico();
 
-    // 1. Inicialización Centralizada del Formulario del Curso (Nivel 1)
+    // 1. Inicialización del Formulario del Curso (Nivel 1)
     this.cursoForm = this.fb.group(
       {
         idCurso: [{ value: idAutomatico, disabled: true }, Validators.required],
         nombreCurso: ['', Validators.required],
         componenteServicio: ['', Validators.required],
-        cantidadSesiones: ['', Validators.required], // Control del Acordeón
+        cantidadSesiones: ['', Validators.required],
         fechaInicio: ['', Validators.required],
         fechaFin: ['', Validators.required],
         asistentes: [null, [Validators.required, Validators.min(1)]],
-        sesiones: this.fb.array([]), // FormArray dinámico para el Nivel 2
+        sesiones: this.fb.array([]),
       },
       {
-        validators: [this.validarRangoFechasCurso(), this.validarAforoCurso()],
+        // 💥 ACTUALIZACIÓN: Registramos el nuevo validador cruzado junto a los anteriores
+        validators: [
+          this.validarRangoFechasCurso(),
+          this.validarAforoCurso(),
+          this.validarFechasSesionesConCurso(), // 👈 NUEVO VALIDADOR
+        ],
       },
     );
 
-    // 2. 💥 EJECUCIÓN OBLIGATORIA DE PROCESOS CRUCIALES 💥
     this.cargarSelectoresDesdeDB();
     this.activarEscuchasCantidadSesiones();
 
     if (!this.authService.canManageOcupacion()) {
       this.cursoForm.disable();
     }
+  }
+
+  // =========================================================================
+  // NUEVO VALIDADOR CRUZADO: Sincroniza las fechas de las Sesiones con el Curso
+  // =========================================================================
+  private validarFechasSesionesConCurso(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const formGroup = control as FormGroup;
+      const fechaInicioCurso = formGroup.get('fechaInicio')?.value;
+      const fechaFinCurso = formGroup.get('fechaFin')?.value;
+      const sesionesArray = formGroup.get('sesiones') as FormArray;
+
+      // Si el curso no tiene sus fechas parametrizadas o no hay sesiones, no evalúa aún
+      if (!fechaInicioCurso || !fechaFinCurso || !sesionesArray || sesionesArray.length === 0) {
+        return null;
+      }
+
+      let tieneErrores = false;
+
+      // Iterar por cada una de las sesiones creadas en el FormArray
+      sesionesArray.controls.forEach((sesionControl) => {
+        const subGroup = sesionControl as FormGroup;
+        const fechaSesion = subGroup.get('fechaSesion')?.value;
+        const fechaSesionCtrl = subGroup.get('fechaSesion');
+
+        if (fechaSesion) {
+          // Validación lógica cruzada: la fecha debe estar estrictamente dentro del rango del curso
+          if (fechaSesion < fechaInicioCurso || fechaSesion > fechaFinCurso) {
+            tieneErrores = true;
+
+            // Inyectamos un token de error específico directo en el control de la sesión afectada
+            fechaSesionCtrl?.setErrors({ ...fechaSesionCtrl.errors, fechaFueraDeCurso: true });
+          } else {
+            // Si la fecha es válida y tenía el error anteriormente, lo removemos de forma limpia
+            if (fechaSesionCtrl?.errors) {
+              const { fechaFueraDeCurso, ...demasErrores } = fechaSesionCtrl.errors;
+              fechaSesionCtrl.setErrors(Object.keys(demasErrores).length ? demasErrores : null);
+            }
+          }
+        }
+      });
+
+      return tieneErrores ? { sesionesConFechasInvalidas: true } : null;
+    };
   }
 
   // Getter de conveniencia para acceder de forma rápida al FormArray en el HTML
@@ -760,37 +808,45 @@ export class OcupacionComponent implements OnInit {
   // Guardado Integrado del Formulario Completo (Curso + N Sesiones del FormArray)
   saveCurso(): void {
     if (this.cursoForm.valid) {
-      const formVal = this.cursoForm.getRawValue();
+      // 1. Obtener los valores del Curso incluyendo los bloqueados (como el idCurso)
+      const cursoVal = this.cursoForm.getRawValue();
 
+      // 2. Construir el payload relacional integrado
       const payload = {
-        nombre: formVal.nombreCurso,
-        componente_servicio: formVal.componenteServicio,
-        fecha_inicio: formVal.fechaInicio,
-        fecha_fin: formVal.fechaFin,
-        asistentes_estimados: formVal.asistentes,
-        // Mapeamos el arreglo de sesiones para mandarlo consolidado al backend
-        sesiones_asociadas: formVal.sesiones.map((s: any) => ({
-          fecha_sesion: s.fechaSesion,
-          dia_semana: s.diaSemana,
-          hora_inicio: s.horaInicioUso,
-          hora_fin: s.horaFinUso,
-          estado_sesion: s.estadoSesion,
-          motivo: s.motivo || null,
-          observaciones: s.observaciones,
-          equipamiento_codigo: s.equipamientoEnumerado,
-        })),
+        idCurso: cursoVal.idCurso,
+        nombreCurso: cursoVal.nombreCurso,
+        componenteServicio: cursoVal.componenteServicio,
+        cantidadSesiones: cursoVal.cantidadSesiones,
+        fechaInicio: cursoVal.fechaInicio,
+        fechaFin: cursoVal.fechaFin,
+        asistentes: cursoVal.asistentes,
+        sesiones: cursoVal.sesiones,
       };
 
+      console.log('Payload transaccional enviado a Node.js:', payload);
+
+      // 3. Consumir tu servicio de equipamientos homologado
       this.equipamientoService.registrarCurso(payload).subscribe({
         next: () => {
-          alert('Curso y sus Sesiones guardados de manera unificada con éxito.');
+          alert('Curso completo junto con sus sesiones guardados de manera exitosa.');
+
+          // Limpieza de estados
           this.cursoForm.reset();
-          this.sesionesFormArray.clear(); // Limpia el acordeón visual
+          this.sesionesFormArray.clear(); // Vacía los formularios dinámicos del listado visual
+
+          // Re-inicializar el identificador único para el siguiente diligenciamiento
           this.cursoForm.get('idCurso')?.setValue(this.generarIdCursoUnico());
           this.cargarSelectoresDesdeDB();
         },
-        error: (err) => console.error('Error al registrar curso consolidado:', err),
+        error: (err) => {
+          console.error('Error al persistir el curso consolidado:', err);
+          alert('Ocurrió un error en el servidor al intentar procesar el curso.');
+        },
       });
+    } else {
+      alert(
+        'Por favor verifique las validaciones. Hay campos obligatorios vacíos en las sesiones.',
+      );
     }
   }
 }

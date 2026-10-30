@@ -87,7 +87,7 @@
       </div>
     </div>
   </div>
-  
+
   <!-- COLUMNA DERECHA: LISTADO DE SESIONES COMPLETAMENTE DESPLEGADAS -->
   <div class="col-lg-7 mb-4" [formGroup]="cursoForm">
     <div class="card shadow-sm border-0" *ngIf="sesionesFormArray.length > 0">
@@ -120,55 +120,86 @@
           </div>
 
           <!-- Cuerpo del Formulario Siempre visible -->
-<div class="card-body bg-white row g-3 pt-3">
-  
-  <!-- 1. Selector de Localidad -->
-<div class="col-md-6">
-  <label class="form-label small fw-bold text-muted">Localidad</label>
-  <select class="form-select form-select-sm" formControlName="localidad" (change)="onLocalidadSesionChange(i)">
-    <option value="">Seleccione Localidad...</option>
-    <!-- CAMBIO: Apunta a getLocalidadesLista() -->
-    <option *ngFor="let loc of getLocalidadesLista()" [value]="loc">{{ loc }}</option>
-  </select>
-</div>
+          <div class="card-body bg-white row g-3 pt-3">
+            <!-- 1. Selector de Localidad -->
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Localidad</label>
+              <select
+                class="form-select form-select-sm"
+                formControlName="localidad"
+                (change)="onLocalidadSesionChange(i)"
+              >
+                <option value="">Seleccione Localidad...</option>
+                <!-- CAMBIO: Apunta a getLocalidadesLista() -->
+                <option *ngFor="let loc of getLocalidadesLista()" [value]="loc">{{ loc }}</option>
+              </select>
+            </div>
 
-<!-- 2. Selector de CDC -->
-<div class="col-md-6">
-  <label class="form-label small fw-bold text-muted">CDC</label>
-  <select class="form-select form-select-sm" formControlName="cdc" (change)="onCdcSesionChange(i)">
-    <option value="">Seleccione CDC...</option>
-    <option *ngFor="let cdc of cdcsSesionPorIndex[i]" [value]="cdc">{{ cdc }}</option>
-  </select>
-</div>
+            <!-- 2. Selector de CDC -->
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">CDC</label>
+              <select
+                class="form-select form-select-sm"
+                formControlName="cdc"
+                (change)="onCdcSesionChange(i)"
+              >
+                <option value="">Seleccione CDC...</option>
+                <option *ngFor="let cdc of cdcsSesionPorIndex[i]" [value]="cdc">{{ cdc }}</option>
+              </select>
+            </div>
 
-  <!-- 3. Tipo de equipamiento -->
-<div class="col-md-6">
-  <label class="form-label small fw-bold text-muted">Tipo de equipamiento</label>
-  <select class="form-select form-select-sm" formControlName="tipoEquipamiento" (change)="onTipoSesionChange(i)">
-    <option value="">Seleccione tipo...</option>
-    <option *ngFor="let tipo of tiposSesionPorIndex[i]" [value]="tipo">{{ tipo }}</option>
-  </select>
-</div>
+            <!-- 3. Tipo de equipamiento -->
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Tipo de equipamiento</label>
+              <select
+                class="form-select form-select-sm"
+                formControlName="tipoEquipamiento"
+                (change)="onTipoSesionChange(i)"
+              >
+                <option value="">Seleccione tipo...</option>
+                <option *ngFor="let tipo of tiposSesionPorIndex[i]" [value]="tipo">
+                  {{ tipo }}
+                </option>
+              </select>
+            </div>
 
-<!-- 4. Equipamiento enumerado -->
-<div class="col-md-6">
-  <label class="form-label small fw-bold text-muted">Equipamiento enumerado</label>
-  <select class="form-select form-select-sm" formControlName="equipamientoEnumerado">
-    <option value="">Seleccione código...</option>
-    <!-- CAMBIO: Como ahora es un array plano de strings, imprimimos 'cod' directamente -->
-    <option *ngFor="let cod of codigosSesionPorIndex[i]" [value]="cod">
-      {{ cod }}
-    </option>
-  </select>
-</div>
+            <!-- 4. Equipamiento enumerado -->
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Equipamiento enumerado</label>
+              <select class="form-select form-select-sm" formControlName="equipamientoEnumerado">
+                <option value="">Seleccione código...</option>
+                <!-- CAMBIO: Como ahora es un array plano de strings, imprimimos 'cod' directamente -->
+                <option *ngFor="let cod of codigosSesionPorIndex[i]" [value]="cod">
+                  {{ cod }}
+                </option>
+              </select>
+            </div>
 
             <div class="col-md-6">
               <label class="form-label small fw-bold text-muted">Fecha de sesión</label>
+              <!-- CAMBIO: Añadimos la clase reactiva is-invalid si detecta el error 'fechaFueraDeCurso' -->
               <input
                 type="date"
                 class="form-control form-control-sm"
                 formControlName="fechaSesion"
+                [class.is-invalid]="
+                  sesion.get('fechaSesion')?.touched &&
+                  sesion.get('fechaSesion')?.hasError('fechaFueraDeCurso')
+                "
               />
+
+              <!-- ALERTA VISUAL: Se activa al instante si digitan un día inválido -->
+              <div
+                *ngIf="
+                  sesion.get('fechaSesion')?.touched &&
+                  sesion.get('fechaSesion')?.hasError('fechaFueraDeCurso')
+                "
+                class="text-danger small mt-1"
+              >
+                ⚠️ La fecha debe estar entre el
+                {{ cursoForm.get('fechaInicio')?.value | date: 'dd/MM/yyyy' }} y el
+                {{ cursoForm.get('fechaFin')?.value | date: 'dd/MM/yyyy' }}.
+              </div>
             </div>
 
             <div class="col-md-6">
