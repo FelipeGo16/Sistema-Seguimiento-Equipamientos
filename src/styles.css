@@ -81,3 +81,99 @@
 .style-grid-view .event-pill:hover {
   transform: scale(1.02);
 }
+
+/* Botones superiores de la barra */
+.btn-view {
+  background: #ffffff; border: 1px solid #e0e0e0; padding: 6px 14px;
+  font-size: 13px; cursor: pointer; color: #555;
+}
+.btn-view.active {
+  background: #0078d4; color: #ffffff; border-color: #0078d4; font-weight: 500;
+}
+.btn-utility {
+  background: #ffffff; border: 1px solid #e0e0e0; padding: 6px 12px;
+  font-size: 13px; margin-left: 5px; cursor: pointer; border-radius: 4px;
+}
+
+/* Selectores de Filtro */
+.filter-select {
+  padding: 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: #ffffff;
+  font-size: 13px;
+  color: #333;
+  outline: none;
+  cursor: pointer;
+}
+.filter-select:focus {
+  border-color: #a6a6a6;
+}
+
+/* Forzado de tamaño nativo de celdas */
+.fc {
+  height: 680px !important;
+}
+.fc-col-header-cell {
+  background-color: #fcfcfc;
+  padding: 8px 0 !important;
+  font-weight: 400 !important;
+  font-size: 13px;
+}
+
+/* Estilo plano para los botones nativos de cambio de mes de FullCalendar */
+.fc .fc-button-primary {
+  background-color: #ffffff !important;
+  border: 1px solid #e0e0e0 !important;
+  color: #333333 !important;
+  text-transform: capitalize !important;
+}
+
+.fc .fc-button-primary:hover {
+  background-color: #f3f3f3 !important;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  color: #333333;
+}
+
+/* CAPA DE FONDO: Ocupa toda la pantalla visible y congela el fondo */
+.outlook-modal-backdrop {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.4) !important; /* Sombreado traslúcido */
+  
+  /* Centrado absoluto en la pantalla */
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  
+  /* Elevación máxima por encima de cualquier tabla o menú lateral */
+  z-index: 999999 !important; 
+}
+
+/* VENTANA BLANCA (Estilo fiel a tu imagen) */
+.outlook-modal-window {
+  width: 500px !important;
+  max-width: 90% !important;
+  height: auto !important;
+  background: #ffffff !important;
+  border-radius: 4px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+/* Animación opcional para una apertura suave */
+@keyframes fadeInModal {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
