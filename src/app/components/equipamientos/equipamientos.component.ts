@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+
 import {
   FormBuilder,
   FormGroup,
@@ -476,14 +477,21 @@ export class EquipamientosComponent implements OnInit {
     // 1. Obtener la fecha actual local en formato YYYY-MM-DD
     const hoy = new Date();
     const anio = hoy.getFullYear();
-    // Se agrega un cero a la izquierda si el mes o día es menor a 10
     const mes = String(hoy.getMonth() + 1).padStart(2, '0');
     const dia = String(hoy.getDate()).padStart(2, '0');
     const fechaActualStr = `${anio}-${mes}-${dia}`;
 
+    // 2. Verificar si el usuario pertenece a Nivel Local
+    const user = this.authService.usuarioActual;
+    const esNivelLocal = user?.perfil === 'Nivel Local';
+
     this.equipmentForm = this.fb.group(
       {
-        localidad: ['', Validators.required],
+        // Si es Nivel Local, pre-llena su localidad y bloquea el selector
+        localidad: [
+          { value: esNivelLocal ? user?.localidad : '', disabled: esNivelLocal },
+          Validators.required,
+        ],
         cdc: [{ value: '', disabled: true }, Validators.required],
         tipoEquipamiento: [{ value: '', disabled: true }, Validators.required],
         equipamientoEnumerado: [{ value: '', disabled: true }, Validators.required],
@@ -500,15 +508,20 @@ export class EquipamientosComponent implements OnInit {
         fechaVigencia: [{ value: fechaActualStr, disabled: true }, Validators.required],
       },
       {
-        validators: [this.validarHorariosDisponibles()], // 👈 Validador personalizado de tiempo y checklist
+        validators: [this.validarHorariosDisponibles()],
       },
     );
 
     this.initChecklistDias();
     this.escucharCambiosEstado();
-
     this.escucharCambiosDias();
 
+    // 3. Si es Nivel Local, dispara tu método para habilitar el selector de CDC de inmediato
+    if (esNivelLocal) {
+      this.onLocalidadChange();
+    }
+
+    // 4. Si es Visualizador, bloquea todo el formulario por completo (incluyendo el CDC recién habilitado)
     if (!this.authService.canManageEquipments()) {
       this.equipmentForm.disable();
     }

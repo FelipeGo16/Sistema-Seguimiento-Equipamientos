@@ -10,6 +10,8 @@ import { OcupacionComponent } from './components/ocupacion/ocupacion.component';
 // CORRECCIÓN: Cambiamos 'CalendarioComponent' por 'CalendarComponent' para alinearlo con tu archivo
 import { CalendarComponent } from './components/calendario/calendario.component';
 
+import { AdminUsuariosComponent } from './components/admin-usuarios/admin-usuarios.component';
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -19,6 +21,7 @@ import { CalendarComponent } from './components/calendario/calendario.component'
     EquipamientosComponent,
     OcupacionComponent,
     CalendarComponent,
+    AdminUsuariosComponent,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],

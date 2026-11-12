@@ -1,0 +1,181 @@
+<div class="container-fluid py-2">
+  <!-- Barra Superior de Herramientas Exclusivas de Administrador -->
+  <div
+    class="d-flex justify-content-between align-items-center mb-3 bg-white p-3 rounded shadow-sm"
+  >
+    <h4 class="m-0 fw-bold text-dark">🛡️ Administración y Seguridad del Sistema</h4>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-dark btn-sm fw-bold" (click)="abrirModalLogs()">
+        📜 Ver Logs de Auditoría
+      </button>
+      <button class="btn btn-success btn-sm fw-bold" (click)="exportarBaseDatos()">
+        💾 Exportar Base de Datos (.db)
+      </button>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- COLUMNA IZQUIERDA: Tarjeta de Registro (Encabezado Azul como en la imagen) -->
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white py-3">
+          <h5 class="card-title m-0 fw-normal">Registrar Usuario</h5>
+        </div>
+        <div class="card-body p-4 bg-white">
+          <form [formGroup]="formUsuario" (ngSubmit)="registrarUsuario()">
+            <div class="mb-3">
+              <label class="form-label text-secondary small fw-bold">Nombre completo</label>
+              <input type="text" formControlName="nombre" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label text-secondary small fw-bold">Correo electrónico</label>
+              <input type="email" formControlName="correo" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label text-secondary small fw-bold">Localidad</label>
+              <select formControlName="localidad" class="form-select">
+                <option value="">Seleccione...</option>
+                <option *ngFor="let loc of localidades" [value]="loc">{{ loc }}</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label text-secondary small fw-bold">Perfil de Alcance</label>
+              <select formControlName="perfil" class="form-select">
+                <option value="">Seleccione...</option>
+                <option *ngFor="let perf of perfiles" [value]="perf">{{ perf }}</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label text-secondary small fw-bold">Contraseña temporal</label>
+              <div class="input-group">
+                <input
+                  [type]="verPassword ? 'text' : 'password'"
+                  formControlName="password"
+                  class="form-control"
+                />
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  (click)="verPassword = !verPassword"
+                >
+                  👁️
+                </button>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label text-secondary small fw-bold">Rol</label>
+              <select formControlName="rol" class="form-select">
+                <option value="">Seleccione...</option>
+                <option *ngFor="let r of roles" [value]="r">{{ r }}</option>
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              [disabled]="formUsuario.invalid"
+              class="btn btn-primary w-100 py-2 fw-bold"
+            >
+              Guardar Usuario
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMNA DERECHA: Tabla de Usuarios (Encabezado Negro como en la imagen) -->
+    <div class="col-md-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white py-3">
+          <h5 class="card-title m-0 fw-normal">Usuarios registrados</h5>
+        </div>
+        <div class="card-body p-0 bg-white">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-3">ID</th>
+                  <th>Nombre</th>
+                  <th>Email</th>
+                  <th>Perfil / Localidad</th>
+                  <th>Rol</th>
+                  <th class="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let u of usuarios">
+                  <td class="ps-3 fw-bold">{{ u.id }}</td>
+                  <td>{{ u.nombre }}</td>
+                  <td class="text-muted small">{{ u.correo }}</td>
+                  <td>
+                    <span class="d-block small fw-bold">{{ u.perfil }}</span>
+                    <span class="text-muted small">{{ u.localidad }}</span>
+                  </td>
+                  <td>
+                    <span class="badge bg-primary px-2 py-1">{{ u.rol }}</span>
+                  </td>
+                  <td class="text-center">
+                    <div class="btn-group btn-group-sm gap-1">
+                      <button class="btn btn-warning text-dark fw-bold rounded" title="Editar">
+                        Editar
+                      </button>
+                      <button
+                        class="btn btn-info text-white fw-bold rounded"
+                        (click)="restaurarClave(u)"
+                      >
+                        Clave
+                      </button>
+                      <button
+                        class="btn btn-danger fw-bold rounded"
+                        (click)="eliminarUsuario(u.id)"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE AUDITORÍA DE LOGS -->
+  <div class="outlook-modal-backdrop" *ngIf="mostrarLogs">
+    <div class="outlook-modal-window" style="width: 750px; height: 500px">
+      <div class="outlook-modal-toolbar bg-dark text-white">
+        <h5 class="m-0 fs-6">📜 Registro de Auditoría y Logs del Sistema</h5>
+        <span class="spacer"></span>
+        <button class="btn-close-x text-white" (click)="mostrarLogs = false">✕</button>
+      </div>
+      <div class="p-3 overflow-auto bg-white flex-grow-1">
+        <table class="table table-sm table-striped small">
+          <thead>
+            <tr>
+              <th>Fecha / Hora</th>
+              <th>Usuario</th>
+              <th>Acción</th>
+              <th>Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let log of logs">
+              <td>{{ log.fecha }}</td>
+              <td class="fw-bold">{{ log.usuario_correo }}</td>
+              <td>
+                <span class="badge bg-secondary">{{ log.accion }}</span>
+              </td>
+              <td>{{ log.detalle }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

@@ -9,6 +9,8 @@ import interactionPlugin from '@fullcalendar/interaction';
 
 import { EquipamientoService } from '../../services/equipamiento.service';
 
+import { AuthService } from '../../services/auth.service';
+
 @Component({
   selector: 'app-calendario-sesiones',
   standalone: true,
@@ -51,6 +53,7 @@ export class CalendarComponent implements OnInit, AfterViewInit {
   constructor(
     private fb: FormBuilder,
     private equipamientoService: EquipamientoService,
+    public authService: AuthService,
   ) {
     this.inicializarFiltros();
     this.inicializarFormularioSesion();
@@ -69,8 +72,12 @@ export class CalendarComponent implements OnInit, AfterViewInit {
   }
 
   inicializarFiltros() {
+    const user = this.authService.usuarioActual;
+    const esNivelLocal = user?.perfil === 'Nivel Local';
+
     this.formFiltros = this.fb.group({
-      localidad: [''],
+      // Si es Nivel Local, pre-llenamos y deshabilitamos el filtro de localidad
+      localidad: [{ value: esNivelLocal ? user?.localidad : '', disabled: esNivelLocal }],
       cdc: [''],
       tipoEquipamiento: [''],
       buscarCurso: [''],
@@ -100,19 +107,20 @@ export class CalendarComponent implements OnInit, AfterViewInit {
     return inicio && fin && inicio >= fin ? { horaInvalida: true } : null;
   }
 
-    cargarDatosDesdeBD() {
-    const valoresFiltro = this.formFiltros.value;
-    
+  cargarDatosDesdeBD() {
+    // Usamos getRawValue() para incluir el campo 'localidad' incluso si está deshabilitado
+    const valoresFiltro = this.formFiltros.getRawValue();
+
     const payloadFiltros = {
       localidad: valoresFiltro.localidad,
       cdc: valoresFiltro.cdc,
       tipo: valoresFiltro.tipoEquipamiento,
-      nombreCurso: valoresFiltro.buscarCurso
+      nombreCurso: valoresFiltro.buscarCurso,
     };
 
     this.equipamientoService.obtenerCalendario(payloadFiltros).subscribe({
       next: (data: any[]) => {
-        this.calendarOptions.events = data.map(sesion => {
+        this.calendarOptions.events = data.map((sesion) => {
           const fecha = sesion.fecha_sesion || '';
           const inicio = sesion.hora_inicio_uso || '00:00';
           const fin = sesion.hora_fin_uso || '00:00';
@@ -120,7 +128,9 @@ export class CalendarComponent implements OnInit, AfterViewInit {
 
           return {
             // Si el JOIN trae el nombre_curso lo usa, sino usa un texto por defecto con el ID
-            title: sesion.nombre_curso ? sesion.nombre_curso.toUpperCase() : `CURSO ID: ${sesion.curso_id}`,
+            title: sesion.nombre_curso
+              ? sesion.nombre_curso.toUpperCase()
+              : `CURSO ID: ${sesion.curso_id}`,
             start: `${fecha}T${inicio}`,
             end: `${fecha}T${fin}`,
             extendedProps: {
@@ -129,13 +139,33 @@ export class CalendarComponent implements OnInit, AfterViewInit {
               equipamiento_enumerado: sesion.equipamiento_enumerado,
               hora_inicio_uso: inicio,
               hora_fin_uso: fin,
-              estado_sesion: estado
+              estado_sesion: estado,
             },
-            color: '#0078d4' // Azul Outlook corporativo
+            color: '#0078d4', // Azul Outlook corporativo
           };
         });
       },
-      error: (err) => console.error('Error al consultar el endpoint /api/calendario:', err)
+      error: (err) => console.error('Error al consultar el endpoint /api/calendario:', err),
+    });
+  }
+
+  handleDateClick(dateStr: string) {
+    const user = this.authService.usuarioActual;
+
+    // Regla de Permisos: Solo 'Administrador' y 'Creador - Editor' pueden registrar sesiones
+    if (!user || user.rol === 'Visualizador') {
+      alert('🔒 Tu rol de Visualizador no tiene permisos para registrar o editar sesiones.');
+      return;
+    }
+
+    this.fechaSeleccionada = dateStr;
+    this.mostrarModalRegistro = true;
+
+    this.formSesion.patchValue({
+      fechaSesion: this.fechaSeleccionada,
+      horaInicio: '08:00',
+      horaFin: '12:00',
+      estado: 'Programada',
     });
   }
 

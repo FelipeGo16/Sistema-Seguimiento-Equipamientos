@@ -12,13 +12,7 @@ import { AuthService } from '../../services/auth.service';
 export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
   errorMsg: string = '';
-
-  // Lista de perfiles estructurada bajo el nuevo requerimiento técnico
-  rolesDisponibles: ('Nivel Central' | 'Equipo Local' | 'Administrador')[] = [
-    'Administrador',
-    'Nivel Central',
-    'Equipo Local',
-  ];
+  cargando: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -26,16 +20,30 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Eliminamos el selector de rol manual; la base de datos lo asigna al autenticar
     this.loginForm = this.fb.group({
-      usuario: ['', Validators.required],
-      rol: ['Equipo Local', Validators.required], // Rol por defecto
+      correo: ['', [Validators.required, Validators.email]],
+      password: ['', Validators.required],
     });
   }
 
   onSubmit(): void {
-    if (this.loginForm.valid) {
-      const { usuario, rol } = this.loginForm.value;
-      this.authService.login(usuario, rol);
-    }
+    if (this.loginForm.invalid) return;
+
+    this.cargando = true;
+    this.errorMsg = '';
+    const { correo, password } = this.loginForm.value;
+
+    // Llamada real al endpoint /api/login
+    this.authService.login(correo, password).subscribe({
+      next: () => {
+        this.cargando = false;
+        // Al actualizarse usuario$ en AuthService, app.component.html mostrará el panel automáticamente
+      },
+      error: (err) => {
+        this.cargando = false;
+        this.errorMsg = err.error?.error || 'Error de conexión con el servidor. Verifica tus credenciales.';
+      },
+    });
   }
 }

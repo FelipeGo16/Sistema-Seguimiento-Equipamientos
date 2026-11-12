@@ -1,62 +1,64 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 
-export interface Usuario {
+export interface UsuarioSesion {
+  id: number;
   username: string;
-  rol: 'Nivel Central' | 'Equipo Local' | 'Administrador';
+  correo: string;
+  localidad: string;
+  perfil: 'Nivel Central' | 'Nivel Local';
+  rol: 'Administrador' | 'Creador - Editor' | 'Visualizador';
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private usuarioSubject = new BehaviorSubject<Usuario | null>(null);
+  private apiUrl = 'http://localhost:3000/api';
+  private usuarioSubject = new BehaviorSubject<UsuarioSesion | null>(null);
 
-  constructor() {
-    const savedUser = localStorage.getItem('session_user');
-    if (savedUser) {
-      this.usuarioSubject.next(JSON.parse(savedUser));
+  usuario$ = this.usuarioSubject.asObservable();
+
+  constructor(private http: HttpClient) {
+    // Recuperar sesión activa si se recarga la página
+    const guardado = localStorage.getItem('usuario_actual');
+    if (guardado) {
+      this.usuarioSubject.next(JSON.parse(guardado));
     }
   }
 
-  get usuario$(): Observable<Usuario | null> {
-    return this.usuarioSubject.asObservable();
-  }
-
-  get usuarioActual(): Usuario | null {
+  // Obtener el valor síncrono del usuario actual
+  get usuarioActual(): UsuarioSesion | null {
     return this.usuarioSubject.value;
   }
 
-  login(username: string, rol: 'Nivel Central' | 'Equipo Local' | 'Administrador'): boolean {
-    const usuario: Usuario = { username, rol };
-    localStorage.setItem('session_user', JSON.stringify(usuario));
-    this.usuarioSubject.next(usuario);
-    return true;
+  login(correo: string, password: string): Observable<UsuarioSesion> {
+    return this.http.post<UsuarioSesion>(`${this.apiUrl}/login`, { correo, password }).pipe(
+      tap((user) => {
+        localStorage.setItem('usuario_actual', JSON.stringify(user));
+        this.usuarioSubject.next(user);
+      }),
+    );
+  }
+
+  // Valida si el rol actual permite crear o editar registros
+  puedeEditar(): boolean {
+    const rol = this.usuarioActual?.rol;
+    return rol === 'Administrador' || rol === 'Creador - Editor';
+  }
+
+  canManageEquipments(): boolean {
+    return this.puedeEditar();
+  }
+
+  // Agrega este método para Ocupación
+  canManageOcupacion(): boolean {
+    return this.puedeEditar();
   }
 
   logout(): void {
-    localStorage.removeItem('session_user');
+    localStorage.removeItem('usuario_actual');
     this.usuarioSubject.next(null);
-  }
-
-  // ==========================================
-  // REGLAS DE PRIVILEGIOS POR ROL SOLICITADAS
-  // ==========================================
-
-  // Privilegio: Administrar, crear, modificar y eliminar equipamientos y parámetros
-  canManageEquipments(): boolean {
-    const rol = this.usuarioActual?.rol;
-    return rol === 'Administrador' || rol === 'Nivel Central';
-  }
-
-  // Privilegio: Actualizar info operativa, crear, consultar, editar y eliminar cursos/sesiones
-  canManageOcupacion(): boolean {
-    const rol = this.usuarioActual?.rol;
-    return rol === 'Administrador' || rol === 'Equipo Local';
-  }
-
-  // Privilegio Exclusivo: Crear, editar, eliminar usuarios y restaurar contraseñas
-  isAdmin(): boolean {
-    return this.usuarioActual?.rol === 'Administrador';
   }
 }

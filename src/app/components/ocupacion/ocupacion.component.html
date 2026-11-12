@@ -78,6 +78,7 @@
 
           <button
             type="submit"
+            *ngIf="authService.puedeEditar()"
             class="btn btn-success w-100 py-2 fw-bold"
             [disabled]="!cursoForm.valid"
           >
