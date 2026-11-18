@@ -15,7 +15,7 @@ export interface UsuarioSesion {
   providedIn: 'root',
 })
 export class AuthService {
-  private apiUrl = 'https://sistema-seguimiento-api-baqt.onrender.com';
+  private apiUrl = 'https://sistema-seguimiento-api-baqt.onrender.com/api';
   private usuarioSubject = new BehaviorSubject<UsuarioSesion | null>(null);
 
   usuario$ = this.usuarioSubject.asObservable();
