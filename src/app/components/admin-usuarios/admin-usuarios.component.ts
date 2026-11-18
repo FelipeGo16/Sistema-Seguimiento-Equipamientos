@@ -10,7 +10,7 @@ import { HttpClient } from '@angular/common/http';
   templateUrl: './admin-usuarios.component.html',
 })
 export class AdminUsuariosComponent implements OnInit {
-  private apiUrl = 'https://sistema-seguimiento-api-baqt.onrender.com';
+  private apiUrl = 'https://sistema-seguimiento-api-baqt.onrender.com/api';
 
   formUsuario!: FormGroup;
   usuarios: any[] = [];
