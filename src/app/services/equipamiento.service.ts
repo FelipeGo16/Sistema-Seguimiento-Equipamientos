@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class EquipamientoService {
   // URL base apuntando al servidor Express en Node.js
-  private apiUrl = 'https://sistema-seguimiento-api-baqt.onrender.com';
+  private apiUrl = 'https://sistema-seguimiento-api-baqt.onrender.com/api';
 
   constructor(private http: HttpClient) {}
 
